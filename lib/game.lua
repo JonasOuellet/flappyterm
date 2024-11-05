@@ -114,7 +114,9 @@ function PlayingState:update(game, delatime)
     game.flappy.pos.y = game.floorHeight + 1
     game.flappy.velocity.y = game.flappy.velocity.y * -0.5
     game.flappy.animationSpeed = 0;
-    return GameOverState:new{score=self.score}
+    local state = GameOverState:new{score=self.score}
+    state:begin(game)
+    return state
   end
 
   -- Check if we have crossed a new pipe
@@ -130,7 +132,9 @@ function PlayingState:update(game, delatime)
       game.flappy.velocity.x = -0.5
       game.flappy.velocity.y = -game.flappy.velocity.y
       game.flappy.animationSpeed = 0;
-      return GameOverState:new{score=self.score}
+      local state = GameOverState:new{score=self.score}
+      state:begin(game)
+      return state
     end
   end
 
@@ -181,10 +185,17 @@ end
 ---@class GameOverState:State
 ---@field score integer
 ---@field continue boolean
+---@field starttime number
 GameOverState = State:new{
   score = 0,
-  continue = true
+  continue = true,
+  starttime = 0
 }
+
+
+function GameOverState:begin(_)
+  self.starttime = os.clock()
+end
 
 ---comment
 ---@param game Game
@@ -203,16 +214,19 @@ function GameOverState:processKeys(keys, game)
   for _, key in pairs(keys) do
     -- enter
     if key == 10 then
-      if self.continue then
-        game:init()
-        return WaitingState:new{}
-      else
-        return ClosingState:new{}
-      end
+        if self.continue then
+          game:init()
+          return WaitingState:new{}
+        else
+          return ClosingState:new{}
+        end
     elseif key == 27 then
       return ClosingState:new{}
     elseif key == 32 then
-      self.continue = not self.continue
+      -- wait for at least one second before responding to key event
+      if os.clock() - self.starttime >= 0.5 then
+        self.continue = not self.continue
+      end
     end
   end
   return State.processKeys(self, keys, game)
