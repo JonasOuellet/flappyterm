@@ -11,6 +11,7 @@ require("lib.geo")
 ---@field height number
 ---@field width number
 ---@field direction Direction
+---@field crossed boolean
 Pipe = {}
 
 ---comment
@@ -37,7 +38,8 @@ function Pipe:new(x, y, height, width, direction)
     y=y,
     width=width,
     height=height,
-    direction=direction
+    direction=direction,
+    crossed=false
   }
   setmetatable(o, self)
   self.__index = self
@@ -70,4 +72,15 @@ end
 
 function Pipe:toString()
   return string.format("Pipe(%f, %f, %f, %f)", self.x, self.y, self.width, self.height)
+end
+
+---comment
+---@return Rect
+function Pipe:rect()
+  if self.direction == "UP" then
+    return Rect:new(self.x, self.y, self.width, self.height)
+  else
+    -- use an abritary number for the height so it goes out of screen
+    return Rect:new(self.x, self.y - self.height, self.width, 1000)
+  end
 end

@@ -46,6 +46,12 @@ function State:shoudQuit()
 end
 
 
+---draw overlay on the game
+---@param screen Screen
+function State:draw(screen)
+end
+
+
 ---@class WaitingState:State
 WaitingState = State:new{}
 
@@ -77,11 +83,13 @@ end
 ---@field lastJumpingTime number
 ---@field timeBetweenJump number
 ---@field jumpYvelocity number
+---@field score integer
 PlayingState = State:new{
   isJumping = false,
   lastJumpingTime = 0,
-  timeBetweenJump = 0.5,
-  jumpYvelocity = 1.5
+  timeBetweenJump = 0.25,
+  jumpYvelocity = 1.5,
+  score = 0
 }
 
 ---comment
@@ -89,10 +97,9 @@ PlayingState = State:new{
 ---@param delatime number
 ---@return State
 function PlayingState:update(game, delatime)
-  local removeFirst = false;
-  for i, pipes in pairs(game.pipes) do
+  for _, pipes in pairs(game.pipes) do
     pipes[1].x = pipes[1].x - (game.pipeSpeed * delatime);
-    pipes[2].x = pipes[2].x - (game.pipeSpeed * delatime); 
+    pipes[2].x = pipes[2].x - (game.pipeSpeed * delatime);
   end
 
   if #game.pipes >= 1 then
@@ -107,7 +114,24 @@ function PlayingState:update(game, delatime)
     game.flappy.pos.y = game.floorHeight + 1
     game.flappy.velocity.y = game.flappy.velocity.y * -0.5
     game.flappy.animationSpeed = 0;
-    return GameOverState:new{}
+    return GameOverState:new{score=self.score}
+  end
+
+  -- Check if we have crossed a new pipe
+  local posx = game.flappy.pos.x
+  local flappyRect = game.flappy:rect()
+  for _, pipes in pairs(game.pipes) do
+    local pip = pipes[1]
+    if pip.x + pip.width < posx and not pip.crossed then
+      self.score = self.score + 1
+      pip.crossed = true
+    end
+    if pipes[1]:rect():intersect(flappyRect) or pipes[2]:rect():intersect(flappyRect) then
+      game.flappy.velocity.x = -0.5
+      game.flappy.velocity.y = -game.flappy.velocity.y
+      game.flappy.animationSpeed = 0;
+      return GameOverState:new{score=self.score}
+    end
   end
 
   -- need to check if i should generate a new pipe
@@ -132,6 +156,7 @@ end
 ---@param game Game
 function PlayingState:begin(game)
   self:jump(game)
+  self.score = 0
 
   -- build the pipes
   game.pipes = {
@@ -139,8 +164,27 @@ function PlayingState:begin(game)
   }
 end
 
+
+---comment
+---@param screen Screen
+function PlayingState:draw(screen)
+  screen:setDrawBgColor(232) -- black
+  screen:setDrawFgColor(255) -- white
+  screen:drawInteger(
+    self.score,
+    Point:new(math.floor(screen.screenX + screen.columns * 0.5), math.floor(screen.rows * 0.20)),
+    "center",
+    1
+  )
+end
+
 ---@class GameOverState:State
-GameOverState = State:new{}
+---@field score integer
+---@field continue boolean
+GameOverState = State:new{
+  score = 0,
+  continue = true
+}
 
 ---comment
 ---@param game Game
@@ -157,12 +201,57 @@ end
 
 function GameOverState:processKeys(keys, game)
   for _, key in pairs(keys) do
-    if key == 32 then
-      game:init()
-      return WaitingState:new{}
+    -- enter
+    if key == 10 then
+      if self.continue then
+        game:init()
+        return WaitingState:new{}
+      else
+        return ClosingState:new{}
+      end
+    elseif key == 27 then
+      return ClosingState:new{}
+    elseif key == 32 then
+      self.continue = not self.continue
     end
   end
   return State.processKeys(self, keys, game)
+end
+
+function GameOverState:draw(screen)
+  local texts =  {
+    "Game Over!",
+    string.format("Score: %i", self.score),
+    ""
+  }
+  if self.continue then
+    texts[#texts+1] = "  > Try Again"
+    texts[#texts+1] = "    Quit"
+  else
+    texts[#texts+1] = "    Try Again"
+    texts[#texts+1] = "  > Quit"
+  end
+
+  texts[#texts+1] = ""
+  texts[#texts+1] = "Spacebar to switch"
+  texts[#texts+1] = "Enter to select"
+
+  local width = 20
+  local height = 10
+  local posx = screen.screenX + math.floor(screen.columns * 0.5) - math.floor(width * 0.5)
+  local posy = 10
+  screen:setDrawBgColor(232)
+  screen:drawScreenRect(
+    Point:new(posx, posy),
+    Point:new(posx + width, posy + height)
+  )
+  screen:setDrawFgColor(255)
+
+  for i, text in pairs(texts) do
+    screen:setCursorPos(Point:new(posx + 1, posy + i))
+    io.stdout:write(text)
+  end
+
 end
 
 ---
@@ -205,6 +294,7 @@ end
 ---@field grass integer
 ---@field flappy Flappy
 ---@field state State
+---@field score integer
 Game = {}
 
 
@@ -214,10 +304,11 @@ Game = {}
 function Game:new(screen)
   local o = {
     floorHeight=6,
-    pipeDistance=35,
-    pipeSpace=16,
+    pipeDistance=36,
+    pipeSpace=12,
     pipes={},
-    screen=screen, pipeSpeed=10,
+    screen=screen,
+    pipeSpeed=30,
     grass=0,
     flappy=Flappy:new(),
     state=WaitingState:new{}
@@ -262,7 +353,7 @@ end
 function Game:update(delatime)
   local keys = self:fetchKeys()
   self.state = self.state:processKeys(keys, self)
-  self.state = self.state:update(self, delatime) 
+  self.state = self.state:update(self, delatime)
 end
 
 
@@ -286,7 +377,7 @@ function Game:draw()
     0,
     self.floorHeight,
     self.screen.columns,
-    4 - math.fmod(self.grass, 4),
+    4 - math.ceil(math.fmod(self.grass, 4)),
     4,
     cstart,
     cend
@@ -298,7 +389,9 @@ function Game:draw()
     pipes[2]:draw(self.screen)
   end
   self.flappy:draw(self.screen)
-  -- self.screen:endDraw()
+
+  self.state:draw(self.screen)
+
 end
 
 

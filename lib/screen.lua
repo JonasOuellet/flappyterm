@@ -1,4 +1,5 @@
 require("lib.geo");
+local drawnum = require("lib.numbers");
 
 ESC = 0x1B;
 CSI = string.format("%c[", ESC);
@@ -11,7 +12,6 @@ CSI = string.format("%c[", ESC);
 --- @field bottomLeft Point
 --- @field screenX integer
 Screen = {}
-
 
 --- Instanciate a new screen.
 --- @param rows integer
@@ -64,7 +64,7 @@ function Screen:setDrawBgColor(index)
 end
 
 function Screen:setDrawFgColor(index)
-  io.stdout:write(string.format("%s%im", CSI, index))
+  io.stdout:write(string.format("%s38;5;%im", CSI, index))
 end
 
 ---comment
@@ -78,7 +78,13 @@ end
 function Screen:drawRect(rect)
     local topLeft = self:mapPoint(rect:topLeft())
     local bottomRight = self:mapPoint(rect:bottomRight())
+    self:drawScreenRect(topLeft, bottomRight)
+end
 
+---comment
+---@param topLeft Point
+---@param bottomRight Point
+function Screen:drawScreenRect(topLeft, bottomRight)
     -- make sure to clamp the value
     topLeft.x = math.max(self.screenX, topLeft.x);
     topLeft.y = math.max(0, topLeft.y);
@@ -106,7 +112,8 @@ function Screen:endDraw()
   io.stdout:flush();
 end
 
-
+---Returns the maximum screen x position
+---@return integer
 function Screen:maxX()
   return self.columns + self.screenX
 end
@@ -145,7 +152,7 @@ function Screen:drawAlternatingHorizontalLine(xStart, y, xEnd, startCount, count
   -- make sure to clamp the value
   local start = math.max(self.screenX, topLeft.x);
   -- I need to investigate but i need to add the + 1 here otherside i am missing one block
-  local len = math.min(self:maxX(), bottomRight.x) - start;
+  local len = math.min(self:maxX(), bottomRight.x) - start + 1;
   local row = topLeft.y;
   if len > 1 and row >= 0 and row <= self.rows then
     io.stdout:write(string.format("%s%i;%iH", CSI, row, start))
@@ -156,7 +163,7 @@ function Screen:drawAlternatingHorizontalLine(xStart, y, xEnd, startCount, count
     local colors = {color1, color2}
 
     while true do
-      local toAdd = math.min(count, len - current + 1)
+      local toAdd = math.min(count, len - current)
       if toAdd < 1 then
         break
       end
@@ -172,7 +179,61 @@ function Screen:drawAlternatingHorizontalLine(xStart, y, xEnd, startCount, count
   end
 end
 
+---Draw the specified integer.  Use set background and set foreground color
+---to set the color
+---
+---@alias Align string
+---| "center"
+---
+---@param number integer
+---@param screenPos Point
+---@param align? Align
+---@param borderWidth? integer
+function Screen:drawInteger(number, screenPos, align, borderWidth)
+  if align == nil then
+    align = "center"
+  end
 
+  if borderWidth == nil then
+    borderWidth = 0
+  end
+
+  local todrawstr = tostring(number)
+  local todraw = {}
+  for i = 1, todrawstr:len(), 1 do
+    todraw[#todraw+1] = drawnum.numbers[tonumber(todrawstr:sub(i, i), 10) + 1]
+  end
+  local todrawX = (#todrawstr  * drawnum.size[1]) + (#todrawstr - 1) + borderWidth + borderWidth
+  local todrawY = drawnum.size[2] + borderWidth + borderWidth;
+  if align == "center" then
+    screenPos.x = screenPos.x - math.floor(todrawX * 0.5)
+    screenPos.y = screenPos.y - math.floor(todrawY * 0.5)
+  end
+
+  -- draw to top border
+  local function drawBorder()
+    for _ = 1, borderWidth, 1 do
+      self:setCursorPos(screenPos)
+      io.stdout:write(string.rep(' ', todrawX))
+      screenPos.y = screenPos.y + 1
+    end
+  end
+
+  drawBorder()
+
+  local spaces = string.rep(' ', borderWidth)
+  for i = 1, drawnum.size[2], 1 do
+    local curRowDraw = {}
+    for _, x in pairs(todraw) do
+      curRowDraw[#curRowDraw+1] = x[i]
+    end
+    self:setCursorPos(screenPos)
+    io.stdout:write(string.format("%s%s%s", spaces, table.concat(curRowDraw, ' '), spaces))
+    screenPos.y = screenPos.y + 1
+  end
+
+  drawBorder()
+end
 
 
 

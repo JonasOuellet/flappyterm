@@ -81,4 +81,32 @@ function Rect:bottomRight()
   return Point:new(self.x + self.width, self.y)
 end
 
+---comment
+---@return Point
+function Rect:bottomLeft()
+  return Point:new(self.x, self.y)
+end
 
+
+function Rect:topRight()
+  return Point:new(self.x + self.width, self.y + self.height)
+end
+
+
+
+---Check if two rect intersects
+---@param other Rect
+---@return boolean
+function Rect:intersect(other)
+  -- https://www.educative.io/answers/how-to-check-if-two-rectangles-overlap-each-other
+  local rect1 = {self.x, self.y, self.x + self.width, self.y + self.height}
+  local rect2 = {other.x , other.y, other.x + other.width, other.y + other.height}
+  local width = math.min(rect1[3], rect2[3]) > math.max(rect1[1], rect2[1])
+  local height = math.min(rect1[4], rect2[4]) > math.max(rect1[2], rect2[2])
+  return width and height
+end
+
+
+function Rect:toString()
+  return string.format("Rect(%f, %f, %f, %f)", self.x, self.y, self.width, self.height)
+end

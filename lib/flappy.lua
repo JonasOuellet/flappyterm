@@ -28,6 +28,8 @@ end
 
 function Flappy:update(deltatime)
   self.velocity.y = self.velocity.y + (-3 * deltatime)
+  self.velocity.x = self.velocity.x - (self.velocity.x * 1.2 * deltatime) -- air friction
+  self.pos.x = self.pos.x + self.velocity.x
   self.pos.y = self.pos.y + self.velocity.y
   self.animation = self.animation + deltatime * self.animationSpeed -- the animation speed
   if not self.isPlaying then
@@ -41,15 +43,25 @@ end
 ---@param screen Screen
 function Flappy:draw(screen)
   -- screen:setFontDraw(30, 103, 1)
-  screen:setFontDraw(38, 5, 16)
-  screen:setFontDraw(48, 5, 220)
-  screen:setCursorPos(screen:mapPoint(self.pos))
-  local mod = math.floor(self.animation) % 4;
-  if mod == 0 then
-    io.stdout:write("\\\\*>")
-  elseif mod == 1 or mod == 3 then
-    io.stdout:write("-=*>")
-  else
-    io.stdout:write(",,*>")
+  -- make sure that flappy is in the scren
+  if self.pos.x >= 0 and self.pos.x <= screen.columns and self.pos.y >= 0 and self.pos.y <= screen.rows then
+    screen:setDrawFgColor(232)
+    screen:setDrawBgColor(226)
+    screen:setCursorPos(screen:mapPoint(self.pos))
+    local mod = math.floor(self.animation) % 4;
+    if mod == 0 then
+      io.stdout:write("\\\\*>")
+    elseif mod == 1 or mod == 3 then
+      io.stdout:write("-=*>")
+    else
+      io.stdout:write(",,*>")
+    end
   end
+end
+
+
+---comment
+---@return Rect
+function Flappy:rect()
+  return Rect:new(self.pos.x, self.pos.y, 4, 2)
 end
