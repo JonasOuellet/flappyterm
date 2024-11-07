@@ -277,10 +277,10 @@ function PlayingState:generatePipe(game)
   local pipeHeight = game.floorHeight + 1;
   local x = pipeStart
   local h = math.random(8, 20)
-  local topHeight = game.screen.rows - pipeHeight - game.pipeSpace - h;
+  local topY = pipeHeight + h + game.pipeSpace;
   return {
       Pipe:new(x, pipeHeight, h, 8, "UP"),
-      Pipe:new(x, top, topHeight, 8, "DOWN")
+      Pipe:new(x, topY, top - topY, 8, "DOWN")
     }
 end
 
@@ -373,7 +373,7 @@ end
 
 function Game:draw()
   -- draw the sky
-  self.screen:beginDraw(14)
+  self.screen:beginDraw(39)
   -- draw the floor
   self.screen:setDrawBgColor(130)
   self.screen:drawRect(Rect:new(0, 0, self.screen.columns, self.floorHeight - 1))

@@ -54,18 +54,17 @@ function Pipe:draw(screen)
   ---  ██
   ---  ██
   ---
-  screen:setDrawBgColor(40)
+  screen:setDrawBgColor(76)
   if self.direction == "UP" then
     --- draw the bottom pipe
     screen:drawRect(Rect:new(self.x + 1, self.y, self.width - 2, self.height - 1))
     --- draw the top
     screen:drawRect(Rect:new(self.x, self.y + self.height - 1, self.width, 1))
   else
-    -- screen:drawRect(Rect:new(self.x + 1, self.y, self.width - 2, self.height - 1))
     --- draw the bottom pipe
-    screen:drawRect(Rect:new(self.x + 1, screen.rows - self.height + 1, self.width - 2, self.height - 1))
+    screen:drawRect(Rect:new(self.x + 1, self.y + 1, self.width - 2, self.height - 1))
     --- draw the top
-    screen:drawRect(Rect:new(self.x, screen.rows - self.height, self.width, 1))
+    screen:drawRect(Rect:new(self.x, self.y, self.width, 1))
   end
 end
 
@@ -81,6 +80,6 @@ function Pipe:rect()
     return Rect:new(self.x, self.y, self.width, self.height)
   else
     -- use an abritary number for the height so it goes out of screen
-    return Rect:new(self.x, self.y - self.height, self.width, 1000)
+    return Rect:new(self.x, self.y, self.width, 1000)
   end
 end
