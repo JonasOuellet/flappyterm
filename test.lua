@@ -1,127 +1,64 @@
+---@diagnostic disable: lowercase-global
+
+local lunatest = require("lunatest")
+
 require("lib.screen")
 require("lib.geo")
 
-local function testPts()
+
+function test_point_add()
   local p1 = Point:origin();
   local p2 = Point:new(10, 10);
 
   local p3 = p1 + p2;
-  assert(p3.x == 10, "X should be 10")
-  assert(p3.y == 10, "Y should be 10")
+  lunatest.assert_equal(p3.x, 10)
+  lunatest.assert_equal(p3.y, 10)
 end
 
 
-testPts()
-
-
-local function testPts2()
+function test_point2_subtract()
   local p2 = Point:new(10, 10);
   local p4 = p2 - Point:new(2, 5);
-  assert(p4.x == 8, "X should be 8")
-  assert(p4.y == 5, "Y should be 5")
+  lunatest.assert_equal(p4.x, 8, "(10 - 2 = 8)")
+  lunatest.assert_equal(p4.y, 5, "(10 - 5 = 5)")
 end
 
-testPts2()
 
-
-local function testScreenMappingOrigin()
+function test_screen_mapping_origin()
   local test = Screen:new(10, 10)
   local pos = Point:origin()
   local res = test:mapPoint(pos)
-  assert(res.x == 0, string.format("Screen pos x should be 0 got %f", res.x))
-  assert(res.y == 10, string.format("Screen pos y should be 10 got %f", res.y))
+  lunatest.assert_equal(res.x, 0, string.format("Screen pos x should be 0 got %f", res.x))
+  lunatest.assert_equal(res.y, 10, string.format("Screen pos y should be 10 got %f", res.y))
 end
 
-testScreenMappingOrigin()
 
-
-local function testScreenMappingTopLeft()
+function test_screen_mapping_top_left()
   local test = Screen:new(10, 10)
   local pos = Point:new(0, 10)
   local res = test:mapPoint(pos)
-  assert(res.x == 0, string.format("Screen pos x should be 0 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
+  lunatest.assert_equal(res.x, 0, string.format("Screen pos x should be 0 got %f", res.x))
+  lunatest.assert_equal(res.y, 0, string.format("Screen pos y should be 0 got %f", res.y))
 end
 
-testScreenMappingTopLeft()
 
-
-local function testScreenMappingTopRight()
+function test_screen_mapping_top_right()
   local test = Screen:new(10, 10)
   local pos = Point:new(10, 10)
   local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
+  lunatest.assert_equal(res.x, 10, string.format("Screen pos x should be 10 got %f", res.x))
+  lunatest.assert_equal(res.y, 0, string.format("Screen pos y should be 0 got %f", res.y))
 end
 
-testScreenMappingTopRight()
 
-
-local function testScreenMappingBotRight()
+function test_screen_mapping_bot_right()
   local test = Screen:new(10, 10)
   local pos = Point:new(10, 0)
   local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 10, string.format("Screen pos y should be 10 got %f", res.y))
+  lunatest.assert_equal(res.x, 10, string.format("Screen pos x should be 10 got %f", res.x))
+  lunatest.assert_equal(res.y, 10, string.format("Screen pos y should be 10 got %f", res.y))
 end
 
-testScreenMappingBotRight()
 
-
-
-
-local function testScreenMappingTopRight()
-  local test = Screen:new(10, 10)
-  local pos = Point:new(10, 10)
-  local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
-end
-
-testScreenMappingTopRight()
-
-
-local function testScreenMappingTopRight()
-  local test = Screen:new(10, 10)
-  local pos = Point:new(10, 10)
-  local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
-end
-
-testScreenMappingTopRight()
-
-
-local function testScreenMappingTopRight()
-  local test = Screen:new(10, 10)
-  local pos = Point:new(10, 10)
-  local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
-end
-
-testScreenMappingTopRight()
-
-
-local function testScreenMappingTopRight()
-  local test = Screen:new(10, 10)
-  local pos = Point:new(10, 10)
-  local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
-end
-
-testScreenMappingTopRight()
-
-
-local function testScreenMappingTopRight()
-  local test = Screen:new(10, 10)
-  local pos = Point:new(10, 10)
-  local res = test:mapPoint(pos)
-  assert(res.x == 10, string.format("Screen pos x should be 10 got %f", res.x))
-  assert(res.y == 0, string.format("Screen pos y should be 0 got %f", res.y))
-end
-
-testScreenMappingTopRight()
-
+lunatest.run()
 

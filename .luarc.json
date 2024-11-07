@@ -1,3 +1,4 @@
 {
-  "workspace.library": ["./"]
+  "workspace.library": ["./"],
+  "runtime.version": "Lua 5.1"
 }
